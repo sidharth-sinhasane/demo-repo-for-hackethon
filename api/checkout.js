@@ -1,5 +1,10 @@
 import { calculateCheckout, CheckoutInputError } from "../lib/checkout.js";
 import { deploymentMetadata, emitOpenObserveLog } from "../lib/openobserve.js";
+import {
+  normalizeCouponCode,
+  normalizeOrderId,
+  RequestInputError,
+} from "../lib/validation.js";
 
 export async function POST(request) {
   const requestId = crypto.randomUUID();
@@ -13,9 +18,9 @@ export async function POST(request) {
       throw new RequestInputError("request body must be valid JSON");
     }
 
-    const orderId = validateOrderId(body.orderId);
+    const orderId = normalizeOrderId(body.orderId);
     const subtotal = Number(body.subtotal);
-    const couponCode = String(body.couponCode ?? "").trim().toUpperCase();
+    const couponCode = normalizeCouponCode(body.couponCode);
     const totals = calculateCheckout({ subtotal, couponCode });
 
     const telemetry = await emitOpenObserveLog("cart.checkout.completed", {
@@ -81,13 +86,6 @@ export async function POST(request) {
   }
 }
 
-function validateOrderId(value) {
-  const orderId = String(value ?? "").trim();
-  if (!/^[A-Za-z0-9_-]{1,80}$/.test(orderId)) {
-    throw new RequestInputError("orderId is invalid");
-  }
-  return orderId;
-}
 function safeOrderId(body) {
   const value = String(body?.orderId ?? "unknown");
   return /^[A-Za-z0-9_-]{1,80}$/.test(value) ? value : "invalid";
@@ -112,10 +110,4 @@ function sanitizeStack(error) {
 }
 function duration(startedAt) {
   return Math.round((performance.now() - startedAt) * 1000) / 1000;
-}
-class RequestInputError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "RequestInputError";
-  }
 }
