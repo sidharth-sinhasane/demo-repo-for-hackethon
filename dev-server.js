@@ -19,10 +19,20 @@ createServer(async (incoming, outgoing) => {
       });
       return sendResponse(outgoing, await checkout(request));
     }
-    if (url.pathname === "/" || url.pathname === "/index.html") {
-      const html = await readFile(new URL("./index.html", import.meta.url));
-      outgoing.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      outgoing.end(html);
+    const staticFiles = {
+      "/": ["./index.html", "text/html; charset=utf-8"],
+      "/index.html": ["./index.html", "text/html; charset=utf-8"],
+      "/ui.js": ["./ui.js", "text/javascript; charset=utf-8"],
+      "/lib/ui-feedback.js": [
+        "./lib/ui-feedback.js",
+        "text/javascript; charset=utf-8",
+      ],
+    };
+    if (staticFiles[url.pathname]) {
+      const [file, contentType] = staticFiles[url.pathname];
+      const content = await readFile(new URL(file, import.meta.url));
+      outgoing.writeHead(200, { "Content-Type": contentType });
+      outgoing.end(content);
       return;
     }
     outgoing.writeHead(404, { "Content-Type": "application/json" });
