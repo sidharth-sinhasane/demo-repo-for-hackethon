@@ -1,0 +1,1 @@
+"""Checkout release lab application."""
