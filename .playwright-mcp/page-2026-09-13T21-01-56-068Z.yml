@@ -1,0 +1,33 @@
+- main [ref=f1e2]:
+  - navigation [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]: C
+      - text: CartCrash
+    - generic [ref=f1e6]: Production healthy - O2 not_configured
+  - generic [ref=f1e9]:
+    - generic [ref=f1e10]: Developer essentials - Production
+    - heading "Everything you need to ship the next big thing." [level=1] [ref=f1e11]
+    - paragraph [ref=f1e12]: A tiny checkout that turns a merged regression into evidence your incident agent can act on.
+  - generic [ref=f1e13]:
+    - article [ref=f1e14]:
+      - generic [ref=f1e15]: </>
+      - generic [ref=f1e16]:
+        - heading "Builder Toolkit" [level=2] [ref=f1e17]
+        - generic [ref=f1e18]: Mechanical keyboard, precision mouse and the emergency coffee reserve.
+        - generic [ref=f1e19]: $125.00 one-time
+    - article [ref=f1e20]:
+      - heading "Complete order" [level=2] [ref=f1e21]
+      - generic [ref=f1e22]: Order ID
+      - textbox "Order ID" [ref=f1e23]: order-demo-001
+      - generic [ref=f1e24]: Coupon code
+      - textbox "Coupon code" [ref=f1e25]: FLASH25
+      - generic [ref=f1e26]: FLASH25 is unknown. Stable production handles it safely.
+      - button "Place order - $125.00" [ref=f1e27] [cursor=pointer]
+    - article [ref=f1e28]:
+      - generic [ref=f1e29]:
+        - generic [ref=f1e30]: Production response
+        - generic [ref=f1e31]: Waiting
+      - generic [ref=f1e32]: Run the same checkout before and after the regression deploy.
+  - generic [ref=f1e33]:
+    - generic [ref=f1e34]: "Revision: offline-test"
+    - generic [ref=f1e35]: Events stream to OpenObserve

@@ -1,0 +1,33 @@
+- main [ref=e2]:
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: C
+      - text: CartCrash
+    - generic [ref=e6]: Production healthy - O2 not_configured
+  - generic [ref=e9]:
+    - generic [ref=e10]: Developer essentials - Production
+    - heading "Everything you need to ship the next big thing." [level=1] [ref=e11]
+    - paragraph [ref=e12]: A tiny checkout that turns a merged regression into evidence your incident agent can act on.
+  - generic [ref=e13]:
+    - article [ref=e14]:
+      - generic [ref=e15]: </>
+      - generic [ref=e16]:
+        - heading "Builder Toolkit" [level=2] [ref=e17]
+        - generic [ref=e18]: Mechanical keyboard, precision mouse and the emergency coffee reserve.
+        - generic [ref=e19]: $125.00 one-time
+    - article [ref=e20]:
+      - heading "Complete order" [level=2] [ref=e21]
+      - generic [ref=e22]: Order ID
+      - textbox "Order ID" [ref=e23]: order-demo-001
+      - generic [ref=e24]: Coupon code
+      - textbox "Coupon code" [ref=e25]: FLASH25
+      - generic [ref=e26]: FLASH25 is unknown. Stable production handles it safely.
+      - button "Place order - $125.00" [ref=e27] [cursor=pointer]
+    - article [ref=e28]:
+      - generic [ref=e29]:
+        - generic [ref=e30]: Production response
+        - generic [ref=e31]: Waiting
+      - generic [ref=e32]: Run the same checkout before and after the regression deploy.
+  - generic [ref=e33]:
+    - generic [ref=e34]: "Revision: offline-test"
+    - generic [ref=e35]: Events stream to OpenObserve

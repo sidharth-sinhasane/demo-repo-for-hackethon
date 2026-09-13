@@ -1,136 +1,73 @@
-# Checkout Release Lab
+# CartCrash
 
-A deliberately small checkout service for demonstrating a change-aware incident
-agent. The service starts healthy, can roll out a known regression, generates
-repeatable traffic, and exports structured logs to OpenObserve.
+CartCrash is a database-free checkout used to demonstrate a change-aware
+production incident agent.
 
-The application is a test fixture, not the incident agent itself. Its purpose is
-to provide known ground truth for reliability testing:
+## Story
 
-- the same request succeeds on the stable release;
-- it fails on the regression release;
-- every event identifies the deployed revision;
-- the stack trace points to the file changed by the regression PR.
+1. A pull request merges into the production branch.
+2. Vercel automatically deploys it.
+3. The API logs Vercel's deployment commit SHA to OpenObserve.
+4. A coupon regression returns HTTP 500.
+5. OpenObserve alerts the agent.
+6. The agent correlates the SHA and stack frame with GitHub, then reports to Slack.
 
-## Run locally
+The UI remains available while checkout fails. This is a real partial outage,
+not a fake error log.
 
-Python 3.11 or newer is recommended.
+## Local run
+
+Node.js 20 or newer is required. There are no package dependencies.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+npm run dev
 ```
 
-Open <http://127.0.0.1:8000>. The dashboard provides buttons for the entire
-demo sequence.
+Open http://127.0.0.1:3000. This loads the existing local `.env`.
 
-## Connect OpenObserve Cloud
+## OpenObserve
 
-Copy `.env.example` values into the secret/configuration mechanism you use to
-start the application. Do not commit real credentials.
+The server reads `O2_INGESTION_URL` and `O2_AUTH_HEADER`. Every health check
+and checkout awaits ingestion before completing, which suits Vercel's
+request-based runtime.
 
-The ingestion URL is the full JSON ingestion endpoint:
-
-```text
-https://<openobserve-host>/api/<organization>/checkout_demo/_json
-```
-
-The authorization value must include the authentication scheme, for example
-`Basic <encoded-credential>`. The application never includes it in status
-responses or logs.
-
-When configuration is absent, the application still works and writes the same
-structured events to stdout. The dashboard's telemetry indicator shows whether
-remote export is configured and whether its most recent batch succeeded.
-
-Suggested OpenObserve stream: `checkout_demo`.
-
-Useful incident fields:
+Alert on:
 
 ```text
-event_name = 'checkout.failed'
+event_name = 'cart.checkout.failed'
 incident_candidate = true
-http_status_code = 500
-service_name = 'checkout-api'
-git_commit_sha = '<deployed revision>'
 ```
 
-After the first events arrive, create an OpenObserve real-time alert matching
-`incident_candidate = true`, or a scheduled alert that counts these records in
-a short lookback window. Set its webhook destination to the deployed incident
-agent.
+Useful evidence fields include `git_commit_sha`, `service_name`,
+`http_status_code`, `error_type`, `stack_trace`, and
+`failure_fingerprint`. Local filesystem paths are removed from stack traces.
 
-## Demonstrate the regression
+## Vercel
 
-1. Keep the stable release selected and click **Run baseline**. All requests
-   succeed even though they use an unknown coupon.
-2. Paste the merged regression PR's commit SHA into the revision field.
-3. Click **Deploy regression**. This represents the explicit rollout that
-   normally follows a merge.
-4. Click **Trigger incident**. All requests fail with the same error signature.
-5. OpenObserve receives the failure events and calls the incident agent.
-6. The agent uses `git_commit_sha` to find the PR, verifies that its changed
-   files overlap the stack trace, and reports the evidence to Slack.
-7. Click **Recover stable** and run the baseline again to show recovery.
+Import this repository in the Vercel dashboard. Keep default framework and
+build settings. Add `O2_INGESTION_URL` and `O2_AUTH_HEADER` in Project
+Settings for Production and Preview. Enable Vercel system environment variables
+so `VERCEL_GIT_COMMIT_SHA` is available at runtime.
 
-The deploy button is a local release simulator. It makes evaluation repeatable
-without requiring CI/CD infrastructure, and it deliberately treats "merged"
-and "deployed" as separate events.
+## Regression PR
 
-## Create the demonstration PR
+Healthy `lib/checkout.js` contains:
 
-The default release is defined near the top of `app/checkout.py`:
-
-```python
-DEFAULT_RELEASE = "stable"
+```js
+const discountRate = COUPON_RATES[normalizedCoupon]?.rate ?? 0;
 ```
 
-For the regression PR, change it to:
+Create a PR titled **Optimize coupon lookup** and change it to:
 
-```python
-DEFAULT_RELEASE = "regression"
+```js
+const discountRate = COUPON_RATES[normalizedCoupon].rate;
 ```
 
-A suitable PR title is **Enable optimized coupon lookup**. The regression path
-uses `COUPON_RATES.get(code)` without a fallback, causing an unknown coupon to
-produce `Decimal * None`.
-
-After that PR is merged, a local process does not update automatically. Either:
-
-- update the local checkout through your normal IDE/GitHub workflow and restart
-  the server, which is the most realistic deployment; or
-- use the dashboard's **Deploy regression** button and paste the merged SHA,
-  which is the deterministic hackathon demonstration.
-
-Do not present the merge itself as the production failure. The rollout of the
-merged revision is what changes runtime behavior.
+It remains valid JavaScript and known coupons still work, but `FLASH25` now
+throws a real TypeError after Vercel deploys the merge.
 
 ## Test
 
-The core behavior tests use only Python's standard library:
-
 ```bash
-python3 -m unittest discover -s tests -v
+npm test
 ```
-
-They establish the ground truth expected from the incident agent: stable accepts
-the unknown coupon, while regression raises the known failure.
-
-## Main endpoints
-
-| Endpoint | Purpose |
-| --- | --- |
-| `GET /` | Demonstration dashboard |
-| `GET /healthz` | Process health |
-| `GET /api/status` | Current release and telemetry state |
-| `POST /api/checkout` | Checkout request |
-| `POST /demo/traffic` | Generate a controlled batch of requests |
-| `POST /demo/deploy` | Roll out stable or regression behavior locally |
-
-## Safety
-
-This application processes no real payments or customer information. Generated
-request IDs and order IDs are synthetic. The deploy and traffic endpoints are
-intended only for a local demonstration environment.
